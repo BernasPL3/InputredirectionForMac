@@ -1,0 +1,33 @@
+name: Build macOS App
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-12
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build app
+        run: |
+          mkdir -p build/InputredirectionForMac.app/Contents/MacOS
+          mkdir -p build/InputredirectionForMac.app/Contents/Resources
+
+          swiftc main.swift -o build/InputredirectionForMac.app/Contents/MacOS/InputredirectionForMac
+
+          cp Info.plist build/InputredirectionForMac.app/Contents/Info.plist
+
+      - name: Create DMG
+        run: |
+          hdiutil create -volname InputredirectionForMac \
+          -srcfolder build/InputredirectionForMac.app \
+          -ov -format UDZO \
+          build/InputredirectionForMac.dmg
+
+      - name: Upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: InputredirectionForMac
+          path: build/
