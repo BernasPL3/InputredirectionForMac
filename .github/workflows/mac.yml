@@ -1,38 +1,38 @@
-name: Build InputredirectionForMac
+name: InputredirectionForMac Builder
 
 on:
   workflow_dispatch:
   push:
 
 jobs:
-  build-macos:
+  build:
     runs-on: macos-latest
 
     steps:
-      - name: Checkout Repository
+      - name: Checkout Projeto
         uses: actions/checkout@v4
 
-      - name: Create App Bundle
+      - name: Criar Estrutura APP
         run: |
           mkdir -p build/InputredirectionForMac.app/Contents/MacOS
           mkdir -p build/InputredirectionForMac.app/Contents/Resources
 
-      - name: Build macOS Application
+      - name: Compilar Aplicativo
         run: |
           swiftc \
           -target x86_64-apple-macos11 \
           -framework Cocoa \
           -framework GameController \
-          -framework AVFoundation \
           main.swift \
           -o build/InputredirectionForMac.app/Contents/MacOS/InputredirectionForMac
 
-      - name: Create Info.plist
+      - name: Criar Info.plist
         run: |
           cat > build/InputredirectionForMac.app/Contents/Info.plist <<EOF
           <?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
           "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+
           <plist version="1.0">
           <dict>
 
@@ -40,36 +40,33 @@ jobs:
               <string>InputredirectionForMac</string>
 
               <key>CFBundleIdentifier</key>
-              <string>com.bernas.inputredirection</string>
+              <string>com.bernaspl3.inputredirection</string>
 
               <key>CFBundleName</key>
               <string>InputredirectionForMac</string>
 
-              <key>CFBundlePackageType</key>
-              <string>APPL</string>
-
               <key>CFBundleVersion</key>
               <string>1.0</string>
 
+              <key>CFBundlePackageType</key>
+              <string>APPL</string>
+
               <key>LSMinimumSystemVersion</key>
               <string>11.0</string>
-
-              <key>NSHighResolutionCapable</key>
-              <true/>
 
           </dict>
           </plist>
           EOF
 
-      - name: Make Executable
+      - name: Permissão Executável
         run: |
           chmod +x build/InputredirectionForMac.app/Contents/MacOS/InputredirectionForMac
 
-      - name: Verify App
+      - name: Mostrar Arquivos
         run: |
-          ls -R build/
+          ls -R build
 
-      - name: Create DMG
+      - name: Criar DMG
         run: |
           hdiutil create \
           -volname "InputredirectionForMac" \
@@ -81,11 +78,11 @@ jobs:
       - name: Upload APP
         uses: actions/upload-artifact@v4
         with:
-          name: InputredirectionForMac-app
+          name: InputredirectionForMac-APP
           path: build/InputredirectionForMac.app
 
       - name: Upload DMG
         uses: actions/upload-artifact@v4
         with:
-          name: InputredirectionForMac-dmg
+          name: InputredirectionForMac-DMG
           path: build/InputredirectionForMac.dmg
