@@ -1,33 +1,48 @@
-name: Build macOS App
+name: Build macOS 11 App
 
 on:
   workflow_dispatch:
+  push:
 
 jobs:
   build:
     runs-on: macos-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - name: Build app
+      - name: Create App Bundle
         run: |
           mkdir -p build/InputredirectionForMac.app/Contents/MacOS
           mkdir -p build/InputredirectionForMac.app/Contents/Resources
 
-          swiftc main.swift -o build/InputredirectionForMac.app/Contents/MacOS/InputredirectionForMac
+      - name: Build Swift App
+        run: |
+          swiftc \
+          -target x86_64-apple-macos11 \
+          main.swift \
+          -o build/InputredirectionForMac.app/Contents/MacOS/InputredirectionForMac
 
+      - name: Copy Info.plist
+        run: |
           cp Info.plist build/InputredirectionForMac.app/Contents/Info.plist
+
+      - name: Make Executable
+        run: |
+          chmod +x build/InputredirectionForMac.app/Contents/MacOS/InputredirectionForMac
 
       - name: Create DMG
         run: |
-          hdiutil create -volname InputredirectionForMac \
+          hdiutil create \
+          -volname "InputredirectionForMac" \
           -srcfolder build/InputredirectionForMac.app \
-          -ov -format UDZO \
-          build/InputredirectionForMac.dmg
+          -ov \
+          -format UDZO \
+          build/InputredirectionForMac-macOS11.dmg
 
-      - name: Upload
+      - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: InputredirectionForMac
+          name: InputredirectionForMac-macOS11
           path: build/
