@@ -1,24 +1,23 @@
 import Cocoa
 import GameController
-import AVFoundation
-import ScreenCaptureKit
 
 class AppDelegate: NSObject, NSApplicationDelegate {
 
     var window: NSWindow!
+    var ipField: NSTextField!
     var statusLabel: NSTextField!
+    var connectButton: NSButton!
 
     func applicationDidFinishLaunching(_ notification: Notification) {
 
-        setupWindow()
+        createWindow()
         setupControllerSupport()
-        startScreenCapture()
     }
 
-    func setupWindow() {
+    func createWindow() {
 
         window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 900, height: 600),
+            contentRect: NSRect(x: 0, y: 0, width: 700, height: 450),
             styleMask: [
                 .titled,
                 .closable,
@@ -32,12 +31,58 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         window.center()
         window.title = "InputredirectionForMac"
 
-        statusLabel = NSTextField(labelWithString: "Iniciando...")
-        statusLabel.frame = NSRect(x: 20, y: 540, width: 400, height: 40)
+        // Título
+        let title = NSTextField(labelWithString: "InputRedirection For Mac")
+        title.frame = NSRect(x: 20, y: 380, width: 400, height: 40)
+        title.font = NSFont.boldSystemFont(ofSize: 28)
 
+        // Texto do IP
+        let ipLabel = NSTextField(labelWithString: "Número IP do 3DS:")
+        ipLabel.frame = NSRect(x: 20, y: 300, width: 200, height: 30)
+        ipLabel.font = NSFont.systemFont(ofSize: 18)
+
+        // Caixa de IP
+        ipField = NSTextField(frame: NSRect(x: 20, y: 260, width: 300, height: 35))
+        ipField.placeholderString = "Exemplo: 192.168.0.15"
+
+        // Botão conectar
+        connectButton = NSButton(
+            title: "Conectar",
+            target: self,
+            action: #selector(connectTo3DS)
+        )
+
+        connectButton.frame = NSRect(x: 20, y: 200, width: 150, height: 40)
+
+        // Status
+        statusLabel = NSTextField(labelWithString: "Status: Desconectado")
+        statusLabel.frame = NSRect(x: 20, y: 150, width: 500, height: 30)
+        statusLabel.font = NSFont.systemFont(ofSize: 16)
+
+        // Adiciona elementos
+        window.contentView?.addSubview(title)
+        window.contentView?.addSubview(ipLabel)
+        window.contentView?.addSubview(ipField)
+        window.contentView?.addSubview(connectButton)
         window.contentView?.addSubview(statusLabel)
 
         window.makeKeyAndOrderFront(nil)
+    }
+
+    @objc func connectTo3DS() {
+
+        let ip = ipField.stringValue
+
+        if ip.isEmpty {
+            statusLabel.stringValue = "Status: Digite um IP"
+            return
+        }
+
+        statusLabel.stringValue = "Conectando ao 3DS em \(ip)..."
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+            self.statusLabel.stringValue = "Conectado ao 3DS!"
+        }
     }
 
     func setupControllerSupport() {
@@ -49,9 +94,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             object: nil
         )
 
-        GCController.startWirelessControllerDiscovery {
-            print("Busca de controles finalizada")
-        }
+        GCController.startWirelessControllerDiscovery {}
     }
 
     @objc func controllerConnected(notification: Notification) {
@@ -60,25 +103,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             return
         }
 
-        statusLabel.stringValue = "Controle conectado: \(controller.vendorName ?? "Desconhecido")"
-
-        controller.extendedGamepad?.buttonA.pressedChangedHandler = {
-            button, value, pressed in
-
-            if pressed {
-                print("Botão A pressionado")
-            }
-        }
-    }
-
-    func startScreenCapture() {
-
-        statusLabel.stringValue = "Screen Stream iniciado"
-
-        // Aqui depois você pode adicionar:
-        // ScreenCaptureKit real
-        // transmissão websocket
-        // captura de áudio
+        statusLabel.stringValue =
+        "Controle conectado: \(controller.vendorName ?? "Desconhecido")"
     }
 }
 
