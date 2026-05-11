@@ -1,15 +1,15 @@
-name: Build macOS 11 App
+name: Build InputredirectionForMac
 
 on:
   workflow_dispatch:
   push:
 
 jobs:
-  build:
+  build-macos:
     runs-on: macos-latest
 
     steps:
-      - name: Checkout
+      - name: Checkout Repository
         uses: actions/checkout@v4
 
       - name: Create App Bundle
@@ -17,20 +17,57 @@ jobs:
           mkdir -p build/InputredirectionForMac.app/Contents/MacOS
           mkdir -p build/InputredirectionForMac.app/Contents/Resources
 
-      - name: Build Swift App
+      - name: Build macOS Application
         run: |
           swiftc \
           -target x86_64-apple-macos11 \
+          -framework Cocoa \
+          -framework GameController \
+          -framework AVFoundation \
           main.swift \
           -o build/InputredirectionForMac.app/Contents/MacOS/InputredirectionForMac
 
-      - name: Copy Info.plist
+      - name: Create Info.plist
         run: |
-          cp Info.plist build/InputredirectionForMac.app/Contents/Info.plist
+          cat > build/InputredirectionForMac.app/Contents/Info.plist <<EOF
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+          "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+
+              <key>CFBundleExecutable</key>
+              <string>InputredirectionForMac</string>
+
+              <key>CFBundleIdentifier</key>
+              <string>com.bernas.inputredirection</string>
+
+              <key>CFBundleName</key>
+              <string>InputredirectionForMac</string>
+
+              <key>CFBundlePackageType</key>
+              <string>APPL</string>
+
+              <key>CFBundleVersion</key>
+              <string>1.0</string>
+
+              <key>LSMinimumSystemVersion</key>
+              <string>11.0</string>
+
+              <key>NSHighResolutionCapable</key>
+              <true/>
+
+          </dict>
+          </plist>
+          EOF
 
       - name: Make Executable
         run: |
           chmod +x build/InputredirectionForMac.app/Contents/MacOS/InputredirectionForMac
+
+      - name: Verify App
+        run: |
+          ls -R build/
 
       - name: Create DMG
         run: |
@@ -39,10 +76,16 @@ jobs:
           -srcfolder build/InputredirectionForMac.app \
           -ov \
           -format UDZO \
-          build/InputredirectionForMac-macOS11.dmg
+          build/InputredirectionForMac.dmg
 
-      - name: Upload Artifacts
+      - name: Upload APP
         uses: actions/upload-artifact@v4
         with:
-          name: InputredirectionForMac-macOS11
-          path: build/
+          name: InputredirectionForMac-app
+          path: build/InputredirectionForMac.app
+
+      - name: Upload DMG
+        uses: actions/upload-artifact@v4
+        with:
+          name: InputredirectionForMac-dmg
+          path: build/InputredirectionForMac.dmg
